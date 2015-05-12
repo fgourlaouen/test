@@ -1,0 +1,65 @@
+Function Main()
+
+dim connS        ' ADO connection object
+dim connT        ' ADO connection object
+dim rs		' ADO recordset object
+dim rs2		' ADO recordset object
+
+
+dim strSQL
+dim strSQL2
+
+ set connS = CreateObject("ADODB.Connection")
+ connS.ConnectionString = "Provider=sqloledb;Data Source=SPBDD4;Initial Catalog=VICIDIAL;User Id=francois;Password=axae2297;'"
+ connS.Open 
+
+
+strSQL="select type, accountid, accountname, startdate, description, note, getdate() as createdate, category, accountmanagerid  from dbo.DATA"
+
+	
+Set rs = connS.execute(strSQL)
+
+ set connT = CreateObject("ADODB.Connection")
+connT.ConnectionString = "Provider=SLXOLEDB.1;Data Source=SLX;Initial Catalog=SLX_STYLPACK;User Id=Admin;Password='spslx06';Persist Security Info=True;Extended Properties='Port=1706;Log=On;CASEINSENSITIVEFIND=ON;AUTOINCBATCHSIZE=1;SVRCERT='"
+connT.Open 
+
+do until rs.eof
+
+Set rs2 = connT.Execute("slx_dbids('ACTIVITY', 1)")
+
+strSQL2 = "INSERT INTO sysdba.ACTIVITY (ACTIVITYID, TYPE, ACCOUNTID, ACCOUNTNAME, PRIORITY, STARTDATE, DURATION, DESCRIPTION, USERID, CATEGORY, LONGNOTES, NOTES)" & _
+	    "VALUES ('" & rs2.fields(0).value & "', 262146,'" & rs.fields(1).value & "','" & rs.fields(2).value & "', 'Haute', '" & rs.fields(3).value & "', 60, '" & rs.fields(4).value &"', '" & rs.fields(8).value &"',  '" & rs.fields(7).value &"', '" & rs.fields(5).value &"',  '" & rs.fields(5).value &"')"
+ connT.execute(strSQL2)
+
+
+  strSQL2="INSERT INTO INDEXUPDATES (INDEXTYPE, INDEXNAME, IDENTIFIER, CACTION, CREATEDATE) " & _
+	  "VALUES(1, 'Activity', '" & rs2.fields(0).value & "', 'INSERT', '" & rs.fields(6).value &"')"
+ 
+ connT.execute(strSQL2)
+
+  strSQL2="INSERT INTO USER_ACTIVITY (ACTIVITYID, USERID, CONFIRMED) " & _
+	  "VALUES ('" & rs2.fields(0).value & "', 'U6UJ9A00006N', 'T')"
+  
+connT.execute(strSQL2)
+
+ 
+
+  rs2.close
+
+  rs.movenext
+loop
+
+rs.Close
+
+Set rs = Nothing
+Set rs2 = Nothing
+
+
+connS.Close
+connT.Close
+
+  Set connS = Nothing
+  Set connT = Nothing
+
+  Main = DTSTaskExecResult_Success
+End Function
