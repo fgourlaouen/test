@@ -1,3 +1,5 @@
+modifications sur le fichier
+
 Function Main()
 
 dim connS        ' ADO connection object
